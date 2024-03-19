@@ -54,3 +54,29 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserOtpVerificationSerializer(serializers.Serializer):
     otp = serializers.CharField()
+
+
+class UsernameSerializer(serializers.Serializer):
+    username = serializers.CharField()
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField()
+    confirm_password = serializers.CharField()
+
+    def validate_password(self, value):
+        if re.match(password_regx, value):
+            return value
+        else:
+            raise serializers.ValidationError(
+                'Enter a valid password.'
+            )
+
+    def validate_confirm_password(self, value):
+        password = self.initial_data.get('password')
+        if value == password:
+            return value
+        else:
+            raise serializers.ValidationError(
+                'Password mismatch.'
+            )

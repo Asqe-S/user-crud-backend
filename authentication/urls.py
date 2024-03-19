@@ -7,4 +7,8 @@ urlpatterns = [
          OtpVerifyView.as_view(), name='verify_otp'),
     path('resend-otp/<str:uid>/<str:token>/',
          ResendOtpView.as_view(), name='verify_otp'),
+    path('forgot-password-user/',
+         ForgotPasswordemailView.as_view(), name='reset_password_user'),
+    path('forgot-password/<str:uid>/<str:token>/',
+         ForgotPasswordView.as_view(), name='reset_password'),
 ]
