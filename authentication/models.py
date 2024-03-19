@@ -59,7 +59,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class ActivationLink(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    uid = models.CharField(max_length=13, null=True, blank=True)
     token = models.CharField(max_length=255, null=True, blank=True)
     otp = models.CharField(max_length=13, null=True, blank=True)
     valid_until = models.DateTimeField(null=True, blank=True)

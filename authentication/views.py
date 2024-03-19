@@ -44,11 +44,56 @@ class UserRegistrationView(APIView):
             send_verification_email(
                 subject, uid, token, valid_until,  user.username, user.email, otp)
         except Exception as e:
-            print(e)
             user.delete()
             return Response({"messages": 'Failed to send email'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         ActivationLink.objects.create(
-            user=user, uid=uid, token=token, otp=otp, valid_until=valid_until)
+            user=user,  token=token, otp=otp, valid_until=valid_until)
 
         return Response({"message": 'Your account has been successfully created. Please check your email to verify your account.'}, status=status.HTTP_201_CREATED)
+
+
+class OtpVerifyView(APIView):
+    def get(self, request, uid, token):
+
+        try:
+            pk = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=pk)
+            verify_otp = ActivationLink.objects.filter(user=user).first()
+            if  token == verify_otp.token:
+                return Response({'message': 'Good to go.'}, status=status.HTTP_200_OK)
+            else:
+                raise Exception
+        except Exception:
+            return Response({'message': 'invalid activation link'}, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, uid, token):
+
+        try:
+            pk = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=pk)
+            verify_otp = ActivationLink.objects.filter(user=user).first()
+            if token != verify_otp.token:
+                raise Exception
+        except Exception:
+            return Response({'message': 'invalid activation link'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.is_verified:
+            return Response(status=status.HTTP_200_OK)
+
+        serializer = UserOtpVerificationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        otp = serializer.validated_data['otp']
+
+        if not verify_otp.valid_until >= timezone.now():
+            return Response({"messages": 'OTP has expired'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if verify_otp.otp == otp:
+            user.is_verified = True
+            user.save()
+            verify_otp.delete()
+            return Response({'message': 'User successfully verified'}, status=status.HTTP_200_OK)
+        else:
+            return Response({"messages": 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+
 
