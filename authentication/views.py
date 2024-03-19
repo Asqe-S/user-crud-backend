@@ -59,7 +59,7 @@ class OtpVerifyView(APIView):
             pk = force_str(urlsafe_base64_decode(uid))
             user = User.objects.get(pk=pk)
             verify_otp = ActivationLink.objects.filter(user=user).first()
-            if  token == verify_otp.token:
+            if token == verify_otp.token:
                 return Response({'message': 'Good to go.'}, status=status.HTTP_200_OK)
             else:
                 raise Exception
@@ -78,7 +78,7 @@ class OtpVerifyView(APIView):
             return Response({'message': 'invalid activation link'}, status=status.HTTP_400_BAD_REQUEST)
 
         if user.is_verified:
-            return Response(status=status.HTTP_200_OK)
+            return Response({'message': 'User was already verified'}, status=status.HTTP_200_OK)
 
         serializer = UserOtpVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -97,3 +97,32 @@ class OtpVerifyView(APIView):
             return Response({"messages": 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ResendOtpView(APIView):
+    def get(self, request, uid, token):
+
+        try:
+            pk = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=pk)
+            verify_otp = ActivationLink.objects.filter(user=user).first()
+            if token != verify_otp.token:
+                raise Exception
+        except Exception:
+            return Response({'message': 'invalid activation link'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if user.is_verified:
+            return Response({'message': 'User was already verified'}, status=status.HTTP_200_OK)
+        otp = get_random_string(length=6, allowed_chars='9876543210')
+        
+        valid_until = timezone.now() + timedelta(minutes=10)
+
+        try:
+            subject = 'Account verification mail'
+            send_verification_email(
+                subject, uid, token, valid_until,  user.username, user.email, otp)
+        except Exception:
+            return Response({"messages": 'Failed to resend OTP. Please try again later.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        verify_otp.otp = otp
+        verify_otp.valid_until = valid_until
+        verify_otp.save()
+        return Response({"messages": 'OTP successfully resent. Please check your email.'}, status=status.HTTP_200_OK)
