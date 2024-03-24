@@ -80,3 +80,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Password mismatch.'
             )
+
+
+class UserLoginViewSerializer(UsernameSerializer):
+    password = serializers.CharField(write_only=True)

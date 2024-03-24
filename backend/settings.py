@@ -167,13 +167,13 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=90),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
 CORS_ALLOWED_ORIGINS = os.environ.get(
-    'CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+    'CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
 
-DOMAIN = os.environ.get('DOMAIN', 'http://localhost:3000').split(',')
+DOMAIN = os.environ.get('DOMAIN', 'http://localhost:5173').split(',')
