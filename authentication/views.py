@@ -15,9 +15,6 @@ from authentication.models import ActivationLink, User
 
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework_simplejwt.exceptions import TokenError
-
 from authentication.serializers import *
 
 # Create your views here.
@@ -289,6 +286,7 @@ class CustomLoginView(APIView):
 
                 refresh['role'] = role
                 refresh['user'] = user.username
+                refresh['is_blocked'] = False
 
                 data['role'] = role
                 data['refresh'] = str(refresh)
